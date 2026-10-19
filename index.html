@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel · Marechal</title>
+<style>
+:root{--bg:#000;--deep:#181818;--dark:#303030;--base:#454545;--bright:#d9d9d9;--hi:#fff;--soft:#e2e2e2;--tx:#f5f5f5;--sub:#808080;--line:#262626;--off:#333;--knob:#9a9a9a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;outline:none}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.wrap{position:relative;height:100%;display:flex;align-items:center;justify-content:center;padding:12px}
+.panel{width:min(100%,400px);height:372px;display:flex;flex-direction:column;background:linear-gradient(145deg,rgba(22,22,22,.92),rgba(4,4,4,.95));border:1px solid var(--dark);border-radius:22px;box-shadow:0 0 0 1px rgba(255,255,255,.05) inset,0 20px 60px rgba(0,0,0,.85),0 0 46px rgba(255,255,255,.08);overflow:hidden;backdrop-filter:blur(6px)}
+.side{width:56px;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:12px}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--soft),var(--base) 55%,#050505);border:1px solid var(--dark);display:flex;align-items:flex-end;justify-content:center;font-size:5px;font-weight:800;color:#fff;letter-spacing:.3px;padding-bottom:3px;margin-bottom:6px;box-shadow:0 0 12px rgba(255,255,255,.2)}
+.side .logo{font-size:20px;font-weight:900;letter-spacing:0;align-items:center;padding-bottom:0}
+.tab{width:46px;height:50px;flex-direction:column;gap:4px;font:600 8px "Segoe UI",Roboto,Arial,sans-serif;border-radius:11px;border:1px solid transparent;background:none;display:flex;align-items:center;justify-content:center;color:var(--sub);cursor:pointer;transition:.25s}
+.tab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.act{border-color:var(--base);background:linear-gradient(160deg,var(--deep),#050505);color:var(--hi);box-shadow:0 0 14px rgba(255,255,255,.2)}
+.main{flex:1;min-width:0;padding:14px 10px 12px 12px;display:flex;flex-direction:column}
+h2{margin:0 0 9px;font-size:15px;font-style:italic;font-weight:700;display:flex;align-items:center;gap:7px;color:var(--tx)}
+h2 svg{width:14px;height:14px;stroke:var(--bright);fill:none;stroke-width:1.8}
+.list{flex:1;overflow-y:auto;display:none;flex-direction:column;gap:7px;padding-right:6px;scrollbar-width:none}
+.list.show{display:flex}
+.list::-webkit-scrollbar{display:none}
+.item{display:flex;align-items:center;gap:8px;background:linear-gradient(160deg,#1c1c1c,#0e0e0e);border:1px solid var(--line);border-radius:13px;padding:9px 10px;flex-shrink:0}
+.ic{width:15px;height:15px;stroke:var(--bright);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.txt{flex:1;min-width:0}
+.txt b{display:block;font-size:12.5px;line-height:1.15;font-weight:700}
+.txt small{display:block;margin-top:3px;font-size:8.5px;line-height:1.3;color:var(--sub)}
+.sw{position:relative;width:38px;height:22px;border-radius:12px;background:var(--off);flex-shrink:0;touch-action:none;cursor:pointer;transition:background .25s,box-shadow .25s}
+.sw i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--knob);transition:transform .25s cubic-bezier(.3,1.4,.5,1),background .25s}
+.sw.on{background:linear-gradient(135deg,#8c8c8c,#f0f0f0);box-shadow:0 0 13px rgba(255,255,255,.35)}
+.sw.on i{transform:translateX(16px);background:#000}
+#b{align-items:center;justify-content:center}
+.go{position:relative;overflow:hidden;width:100%;max-width:230px;height:54px;border:1px solid var(--hi);border-radius:16px;cursor:pointer;color:#fff;font:800 14px/1 "Segoe UI",Roboto,Arial,sans-serif;letter-spacing:1.6px;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#141414,#2e2e2e 50%,#555);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 6px 22px rgba(255,255,255,.18);animation:pulse 2.4s ease-in-out infinite;transition:transform .15s}
+.go svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.go::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:shine 3s ease-in-out infinite}
+.go:active{transform:scale(.95)}
+@keyframes shine{0%,55%{left:-60%}100%{left:130%}}
+@keyframes pulse{50%{box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 6px 32px rgba(255,255,255,.3)}}
+@media (prefers-reduced-motion:reduce){.go,.go::after{animation:none}}
+#panel.off{display:none}
+.login{width:min(100%,340px);padding:26px 22px 22px;border-radius:24px;text-align:center;background:linear-gradient(150deg,rgba(24,24,24,.93),rgba(4,4,4,.96));border:1px solid var(--dark);box-shadow:0 0 0 1px rgba(255,255,255,.05) inset,0 24px 70px rgba(0,0,0,.9),0 0 50px rgba(255,255,255,.1);backdrop-filter:blur(6px);animation:rise .6s ease both}
+.login.out{animation:fade .35s ease forwards}
+.login.bad{animation:shake .45s}
+.login .logo{width:62px;height:62px;border-radius:16px;font-size:36px;font-weight:900;letter-spacing:0;align-items:center;margin:0 auto 14px;padding-bottom:0;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.login h1{margin:0;font-size:19px;font-style:italic;font-weight:800}
+.login p{margin:5px 0 18px;font-size:11px;color:var(--sub)}
+.login label{display:block;text-align:left;font-size:11px;font-weight:700;color:var(--hi);margin:0 0 6px 2px}
+.field{display:flex;align-items:center;gap:9px;height:46px;padding:0 6px 0 13px;border-radius:14px;background:#0a0a0a;border:1px solid var(--line);transition:border-color .2s,box-shadow .2s}
+.field:focus-within{border-color:var(--bright);box-shadow:0 0 16px rgba(255,255,255,.2)}
+.field.err{border-color:var(--bright)}
+.field svg{width:16px;height:16px;stroke:var(--bright);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.field input{flex:1;min-width:0;height:100%;background:none;border:0;color:var(--tx);font:600 16px "Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.5px;-webkit-user-select:text;user-select:text}
+.field input::placeholder{color:#555;font-weight:400;letter-spacing:0}
+.eye{width:36px;height:36px;border:0;background:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.eye svg{stroke:var(--sub)}
+.msg{height:16px;margin:8px 0 12px;font-size:11px;font-weight:600;color:var(--hi);opacity:0;transition:opacity .2s}
+.msg.show{opacity:1}
+.login .go{max-width:none;width:100%;height:50px}
+.ft{margin-top:14px;font-size:9px;color:#555}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.97)}}
+@keyframes fade{to{opacity:0;transform:scale(.96)}}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.panel.in{animation:rise .5s ease both}
+.tab.bot{margin-top:auto}
+#c{justify-content:flex-start}
+#c .sign{margin-top:auto}
+.dn{font-size:11px;line-height:1.3;color:var(--soft);margin:-3px 0 3px 2px}
+.sign{text-align:center;padding:4px 0 2px}
+.sign b{display:block;font-size:15px;font-style:italic;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#8c8c8c,#fff,#8c8c8c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sign span{display:block;margin-top:3px;font-size:10px;color:var(--sub)}
+.top{height:46px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line);font:700 15px "Courier New",Courier,monospace;letter-spacing:.55em;padding-left:.55em;color:var(--hi);text-shadow:0 0 12px rgba(255,255,255,.45);background:linear-gradient(180deg,rgba(255,255,255,.04),transparent)}
+.body{flex:1;min-height:0;display:flex}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cell{display:flex;align-items:center;gap:9px;height:46px;padding:0 10px;border-radius:12px;background:linear-gradient(160deg,#1c1c1c,#0e0e0e);border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--soft);touch-action:none;cursor:pointer;transition:.2s}
+.box{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--bright);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s}
+.cell.on{border-color:var(--hi);box-shadow:0 0 12px rgba(255,255,255,.18);color:#fff}
+.cell.on .box{background:var(--hi)}
+.cell.on .box::after{content:"";width:4px;height:8px;border:solid #000;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.inf{padding:15px 14px;font-size:13px;font-weight:600;color:var(--soft)}
+#c{justify-content:flex-start}
+
+/* ----- game selection + injection overlay ----- */
+.game-select{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;width:100%;padding:8px 0 4px}
+.game-btn{flex:1;min-width:110px;max-width:160px;height:78px;border-radius:18px;border:1px solid var(--dark);background:linear-gradient(160deg,#1c1c1c,#0e0e0e);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--soft);font:700 13px "Segoe UI",Roboto,Arial,sans-serif;letter-spacing:1.2px;box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 8px 24px rgba(0,0,0,.6);transition:transform .15s,box-shadow .25s,border-color .25s;text-transform:uppercase}
+.game-btn svg{width:26px;height:26px;stroke:var(--bright);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.game-btn:hover,.game-btn:focus-visible{border-color:var(--base);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 8px 28px rgba(255,255,255,.12)}
+.game-btn:active{transform:scale(.96)}
+.game-btn.ff{color:#e2e2e2}
+.game-btn.ffmax{color:#e2e2e2}
+
+/* injecting overlay */
+.inject-overlay{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);padding:20px;opacity:0;transition:opacity .3s}
+.inject-overlay.show{display:flex;opacity:1}
+.inject-box{position:relative;width:min(88%,360px);padding:38px 22px 32px;border-radius:28px;text-align:center;background:linear-gradient(155deg,rgba(28,28,28,.96),rgba(4,4,4,.98));border:1px solid var(--base);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 30px 80px rgba(0,0,0,.9),0 0 70px rgba(255,255,255,.12);overflow:hidden}
+.inject-box::before{content:"";position:absolute;inset:-2px;border-radius:28px;padding:1px;background:linear-gradient(135deg,rgba(255,255,255,.35),transparent 40%,transparent 60%,rgba(255,255,255,.25));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:borderGlow 2.4s linear infinite}
+@keyframes borderGlow{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
+
+.inject-icon{width:70px;height:70px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 30%,#3a3a3a,#0a0a0a);border:1px solid var(--base);box-shadow:0 0 30px rgba(255,255,255,.18),0 0 0 6px rgba(255,255,255,.03);animation:iconSpin 3s linear infinite}
+@keyframes iconSpin{to{transform:rotate(360deg)}}
+.inject-icon svg{width:36px;height:36px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.inject-title{font-size:17px;font-weight:800;font-style:italic;letter-spacing:1.5px;color:var(--hi);margin:0 0 6px;text-transform:uppercase}
+.inject-sub{font-size:11px;color:var(--sub);letter-spacing:.6px;margin:0 0 22px}
+
+.progress-track{width:100%;height:8px;border-radius:8px;background:#1a1a1a;overflow:hidden;border:1px solid #2a2a2a;margin-bottom:10px}
+.progress-fill{height:100%;width:0%;border-radius:8px;background:linear-gradient(90deg,#6a6a6a,#f5f5f5,#6a6a6a);background-size:200% 100%;animation:progressShine 1.2s linear infinite;transition:width .18s linear}
+@keyframes progressShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.progress-pct{font:700 12px "Courier New",Courier,monospace;letter-spacing:2px;color:var(--bright)}
+
+.stage{font-size:10.5px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;min-height:16px;margin-top:10px;transition:opacity .2s}
+.stage.blink{animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+
+.spark{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;opacity:0;pointer-events:none}
+@keyframes sparkFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
+
+.inject-done .inject-icon{animation:none;background:radial-gradient(circle at 30% 30%,#3a3a3a,#0a0a0a);box-shadow:0 0 40px rgba(255,255,255,.45)}
+.inject-done .progress-fill{background:linear-gradient(90deg,#8c8c8c,#fff)}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="wrap">
+<div class="login" id="login">
+  <div class="logo">M</div>
+  <h1>Marechal</h1>
+  <p>Digite sua key para entrar.</p>
+  <label for="key">Senha (Key)</label>
+  <div class="field" id="field">
+    <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    <input id="key" type="password" placeholder="Digite sua key" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button class="eye" id="eye" type="button" aria-label="Mostrar senha"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <div class="msg" id="msg">Key inválida. Tente novamente.</div>
+  <button class="go" id="enter" type="button"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>ENTRAR</button>
+</div>
+<div class="panel off" id="panel">
+  <div class="top">MARECHAL</div>
+  <div class="body">
+  <div class="side">
+    <div class="logo">M</div>
+    <button class="tab act" data-t="a" aria-label="Funções iniciais"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>funções</button>
+    <button class="tab" data-t="b" aria-label="Modo de jogo"><svg viewBox="0 0 24 24"><path d="M6 8h12a4 4 0 0 1 4 4v3a3 3 0 0 1-5 2l-1.5-2h-9L5 17a3 3 0 0 1-5-2v-3a4 4 0 0 1 4-4h2z" transform="translate(1 0)"/><path d="M7 11v3M5.5 12.5h3M16 12h.01M18 13.5h.01"/></svg>jogo</button>
+    <button class="tab" data-t="c" aria-label="Descrição"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>info</button>
+  </div>
+  <div class="main">
+    <h2><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span id="ttl">Funções iniciais:</span></h2>
+
+    <div class="list show" id="a">
+      <div class="grid">
+        <div class="cell"><i class="box"></i><span>Aimbot</span></div>
+        <div class="cell"><i class="box"></i><span>Estabilizar</span></div>
+        <div class="cell"><i class="box"></i><span>Anti tremer</span></div>
+        <div class="cell"><i class="box"></i><span>Precisão</span></div>
+      </div>
+    </div>
+
+    <div class="list" id="b">
+      <!-- two game options, same button color -->
+      <div class="game-select">
+        <button class="game-btn ff" type="button" data-game="ff">
+          <svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+          FF
+        </button>
+        <button class="game-btn ffmax" type="button" data-game="ffmax">
+          <svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+          FF MAX
+        </button>
+      </div>
+    </div>
+
+    <div class="list" id="c">
+      <div class="item inf">Criador: Marechal</div>
+      <div class="item inf">Versão: 1.0</div>
+    </div>
+  </div>
+  </div>
+</div>
+</div>
+
+<!-- injection overlay -->
+<div class="inject-overlay" id="injectOverlay">
+  <div class="inject-box" id="injectBox">
+    <div class="inject-icon" id="injectIcon">
+      <svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+    </div>
+    <h3 class="inject-title" id="injectTitle">INJETANDO</h3>
+    <p class="inject-sub" id="injectSub">Preparando ambiente seguro</p>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0%</div>
+    <div class="stage blink" id="injectStage">Conectando ao servidor</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY="Marechal",L=document.getElementById("login"),inp=document.getElementById("key"),fl=document.getElementById("field"),msg=document.getElementById("msg"),P0=document.getElementById("panel");
+  document.getElementById("eye").addEventListener("click",function(){inp.type=inp.type==="password"?"text":"password"});
+  function go(){
+    if(inp.value.trim()===KEY){
+      L.classList.add("out");
+      setTimeout(function(){L.style.display="none";P0.classList.remove("off");P0.classList.add("in")},330);
+    }else{
+      msg.classList.add("show");fl.classList.add("err");
+      L.classList.remove("bad");void L.offsetWidth;L.classList.add("bad");
+    }
+  }
+  inp.addEventListener("input",function(){msg.classList.remove("show");fl.classList.remove("err")});
+  inp.addEventListener("keydown",function(e){if(e.key==="Enter")go()});
+  document.getElementById("enter").addEventListener("click",go);
+})();
+
+var titles={a:"Funções iniciais:",b:"Modo de jogo:",c:"Descrição:"};
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click",function(){
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("act")});
+    document.querySelectorAll(".list").forEach(function(x){x.classList.remove("show")});
+    t.classList.add("act");
+    document.getElementById(t.dataset.t).classList.add("show");
+    document.getElementById("ttl").textContent=titles[t.dataset.t];
+  });
+});
+
+document.querySelectorAll(".sw,.cell").forEach(function(s){
+  var sx,sy,moved,drag=false;
+  s.addEventListener("pointerdown",function(e){sx=e.clientX;sy=e.clientY;moved=false;drag=true;s.setPointerCapture(e.pointerId)});
+  s.addEventListener("pointermove",function(e){
+    if(!drag||moved)return;
+    var dx=e.clientX-sx,dy=e.clientY-sy;
+    if(Math.abs(dx)>8||Math.abs(dy)>8){
+      moved=true;
+      s.classList.toggle("on",(dy>0&&Math.abs(dy)>=Math.abs(dx))||(dx>0&&Math.abs(dx)>Math.abs(dy)));
+    }
+  });
+  s.addEventListener("pointerup",function(){ if(drag&&!moved)s.classList.toggle("on"); drag=false });
+  s.addEventListener("pointercancel",function(){drag=false});
+});
+
+/* ---------- GAME INJECTION FLOW ---------- */
+(function(){
+  var overlay = document.getElementById("injectOverlay");
+  var box = document.getElementById("injectBox");
+  var fill = document.getElementById("progressFill");
+  var pct = document.getElementById("progressPct");
+  var stage = document.getElementById("injectStage");
+  var sub = document.getElementById("injectSub");
+  var title = document.getElementById("injectTitle");
+  var icon = document.getElementById("injectIcon");
+
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/i.test(navigator.userAgent);
+
+  var links = {
+    ff: {
+      android: "intent://#Intent;scheme=freefire;package=com.dts.freefireth;end",
+      ios: "freefire://"
+    },
+    ffmax: {
+      android: "intent://#Intent;scheme=freefire;package=com.dts.freefiremax;end",
+      ios: "freefiremax://"
+    }
+  };
+
+  var stagesList = [
+    "Conectando ao servidor",
+    "Verificando assinatura",
+    "Carregando módulos",
+    "Aplicando funções",
+    "Otimizando memória",
+    "Finalizando injeção"
+  ];
+
+  var busy = false;
+
+  function openGame(game){
+    var url = (isIOS ? links[game].ios : links[game].android);
+    // Use window.location for both; on Android intent:// works via location
+    try {
+      window.location.href = url;
+    } catch(e) {
+      // fallback for some browsers blocking intent
+      var a = document.createElement('a');
+      a.href = url;
+      a.target = '_self';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+
+  function createSparks(){
+    for(var i=0;i<14;i++){
+      var s = document.createElement('div');
+      s.className = 'spark';
+      var angle = Math.random()*Math.PI*2;
+      var dist = 60 + Math.random()*80;
+      s.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+      s.style.setProperty('--dy', Math.sin(angle)*dist + 'px');
+      s.style.left = '50%';
+      s.style.top = '50%';
+      s.style.animation = 'sparkFly ' + (0.5 + Math.random()*0.7) + 's ease-out forwards';
+      s.style.animationDelay = (Math.random()*0.15) + 's';
+      icon.appendChild(s);
+      setTimeout(function(el){ return function(){ if(el.parentNode) el.parentNode.removeChild(el); }; }(s), 1400);
+    }
+  }
+
+  function runInjection(game){
+    if(busy) return;
+    busy = true;
+    overlay.classList.add('show');
+    box.classList.remove('inject-done');
+    fill.style.width = '0%';
+    pct.textContent = '0%';
+    stage.textContent = stagesList[0];
+    stage.classList.add('blink');
+    sub.textContent = 'Preparando ambiente seguro';
+    title.textContent = 'INJETANDO';
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>';
+
+    var progress = 0;
+    var stepIndex = 0;
+    var totalSteps = 100;
+    var interval = setInterval(function(){
+      var inc = 1 + Math.random() * 3.5;
+      progress = Math.min(100, progress + inc);
+      fill.style.width = progress + '%';
+      pct.textContent = Math.floor(progress) + '%';
+
+      var newStep = Math.min(stagesList.length - 1, Math.floor(progress / (100 / stagesList.length)));
+      if(newStep !== stepIndex){
+        stepIndex = newStep;
+        stage.textContent = stagesList[stepIndex];
+        stage.classList.add('blink');
+        sub.textContent = stagesList[stepIndex];
+      }
+
+      if(progress >= 100){
+        clearInterval(interval);
+        stage.classList.remove('blink');
+        stage.textContent = 'Injeção concluída';
+        sub.textContent = 'Abrindo o jogo...';
+        title.textContent = 'CONCLUÍDO';
+        box.classList.add('inject-done');
+        icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+        createSparks();
+
+        setTimeout(function(){
+          overlay.classList.remove('show');
+          openGame(game);
+          setTimeout(function(){ busy = false; }, 600);
+        }, 800);
+      }
+    }, 70);
+  }
+
+  document.querySelectorAll('.game-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var game = btn.dataset.game;
+      runInjection(game);
+    });
+  });
+})();
+
+/* ---------- BACKGROUND CANVAS ---------- */
+var c=document.getElementById("bg"),x=c.getContext("2d"),W,H,P=[],D=Math.min(window.devicePixelRatio||1,2);
+function rs(){W=innerWidth;H=innerHeight;c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0);
+  P=[];var n=Math.round(W*H/9000);for(var i=0;i<n;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.4+.4,h:Math.random()})}
+addEventListener("resize",rs);rs();
+var t=0,reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function f(){
+  t+=.004;x.fillStyle="#000";x.fillRect(0,0,W,H);
+  var gx=W/2+Math.cos(t)*W*.25,gy=H/2+Math.sin(t*1.3)*H*.2;
+  var g=x.createRadialGradient(gx,gy,0,gx,gy,Math.max(W,H)*.6);
+  g.addColorStop(0,"rgba(150,150,150,.14)");g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  for(var i=0;i<P.length;i++){
+    var p=P[i];if(!reduce){p.x+=p.vx;p.y+=p.vy;}
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    x.fillStyle=p.h>.7?"rgba(255,255,255,.85)":p.h>.3?"rgba(190,190,190,.7)":"rgba(110,110,110,.8)";
+    x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fill();
+    for(var j=i+1;j<P.length;j++){
+      var q=P[j],dx=p.x-q.x,dy=p.y-q.y,d=dx*dx+dy*dy;
+      if(d<9000){x.strokeStyle="rgba(200,200,200,"+(.25*(1-d/9000))+")";x.lineWidth=.6;x.beginPath();x.moveTo(p.x,p.y);x.lineTo(q.x,q.y);x.stroke();}
+    }
+  }
+  requestAnimationFrame(f);
+}
+f();
+</script>
+</body>
+</html>
